@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercice 3 - Force Graph Football World Cup</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container-fluid {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        #graph {
+            border: 2px solid #1e3c72;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        .btn-back {
+            background: #1e3c72;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        .btn-back:hover {
+            background: #2a5298;
+            color: white;
+        }
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+        }
+        .node {
+            stroke: #fff;
+            stroke-width: 2px;
+            cursor: pointer;
+        }
+        .node:hover {
+            stroke: #ff6b6b;
+            stroke-width: 4px;
+        }
+        .link {
+            stroke: #999;
+            stroke-opacity: 0.6;
+        }
+        .node-label {
+            font-size: 10px;
+            font-weight: bold;
+            pointer-events: none;
+            text-shadow: 0 1px 2px white, 0 -1px 2px white, 1px 0 2px white, -1px 0 2px white;
+            fill: #333;
+        }
+        .info-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .legend {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+        .stats-box {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <a href="index_tp2.html" class="btn-back">← Retour au menu</a>
+        
+        <h1>🏆 Exercice 3 - World Cup Football Network</h1>
+        
+        <div class="row">
+            <div class="col-12">
+                <div id="graph"></div>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <h5>📌 Instructions :</h5>
+            <ul>
+                <li><strong>35 pays</strong> participants aux Coupes du Monde</li>
+                <li><strong>Liens</strong> représentent le nombre de matchs joués entre pays</li>
+                <li><strong>Survolez</strong> un nœud pour voir les connexions</li>
+                <li><strong>Cliquez</strong> pour voir les détails du pays</li>
+                <li><strong>Déplacez</strong> les nœuds pour réorganiser le graphe</li>
+            </ul>
+            
+            <div class="stats-box">
+                <strong>📊 Statistiques :</strong>
+                <span id="stats">Chargement...</span>
+            </div>
+            
+            <div class="legend">
+                <strong>Légende par région :</strong>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e74c3c;"></div>
+                    <span>Amérique du Sud</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3498db;"></div>
+                    <span>Europe de l'Ouest</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f39c12;"></div>
+                    <span>Europe de l'Est</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2ecc71;"></div>
+                    <span>Afrique</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #9b59b6;"></div>
+                    <span>Europe du Nord</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #16a085;"></div>
+                    <span>Asie</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Données réelles de la Coupe du Monde
+        var footballData = {
+  "nodes": [
+    {"id": 0, "name": "ARG", "fullName": "Argentina", "group": 1},
+    {"id": 1, "name": "AUT", "fullName": "Austria", "group": 2},
+    {"id": 2, "name": "BEL", "fullName": "Belgium", "group": 2},
+    {"id": 3, "name": "BGR", "fullName": "Bulgaria", "group": 3},
+    {"id": 4, "name": "BRA", "fullName": "Brazil", "group": 1},
+    {"id": 5, "name": "CHE", "fullName": "Switzerland", "group": 2},
+    {"id": 6, "name": "CHL", "fullName": "Chile", "group": 1},
+    {"id": 7, "name": "CMR", "fullName": "Cameroon", "group": 4},
+    {"id": 8, "name": "COL", "fullName": "Colombia", "group": 1},
+    {"id": 9, "name": "DEU", "fullName": "Germany", "group": 2},
+    {"id": 10, "name": "DNK", "fullName": "Denmark", "group": 5},
+    {"id": 11, "name": "ESP", "fullName": "Spain", "group": 2},
+    {"id": 12, "name": "FRA", "fullName": "France", "group": 2},
+    {"id": 13, "name": "GBR", "fullName": "England", "group": 5},
+    {"id": 14, "name": "GRE", "fullName": "Greece", "group": 3},
+    {"id": 15, "name": "HRV", "fullName": "Croatia", "group": 3},
+    {"id": 16, "name": "IRN", "fullName": "Iran", "group": 6},
+    {"id": 17, "name": "ITA", "fullName": "Italy", "group": 2},
+    {"id": 18, "name": "JAM", "fullName": "Jamaica", "group": 4},
+    {"id": 19, "name": "JPN", "fullName": "Japan", "group": 6},
+    {"id": 20, "name": "KOR", "fullName": "South Korea", "group": 6},
+    {"id": 21, "name": "MAR", "fullName": "Morocco", "group": 4},
+    {"id": 22, "name": "MEX", "fullName": "Mexico", "group": 1},
+    {"id": 23, "name": "NGA", "fullName": "Nigeria", "group": 4},
+    {"id": 24, "name": "NLD", "fullName": "Netherlands", "group": 2},
+    {"id": 25, "name": "NOR", "fullName": "Norway", "group": 5},
+    {"id": 26, "name": "PRT", "fullName": "Portugal", "group": 2},
+    {"id": 27, "name": "PRY", "fullName": "Paraguay", "group": 1},
+    {"id": 28, "name": "ROM", "fullName": "Romania", "group": 3},
+    {"id": 29, "name": "SCO", "fullName": "Scotland", "group": 5},
+    {"id": 30, "name": "TUN", "fullName": "Tunisia", "group": 4},
+    {"id": 31, "name": "TUR", "fullName": "Turkey", "group": 3},
+    {"id": 32, "name": "USA", "fullName": "USA", "group": 1},
+    {"id": 33, "name": "YUG", "fullName": "Yugoslavia", "group": 3},
+    {"id": 34, "name": "ZAF", "fullName": "South Africa", "group": 4}
+  ],
+  "links": [
+    {"source": 0, "target": 11, "value": 4},
+    {"source": 0, "target": 17, "value": 9},
+    {"source": 1, "target": 9, "value": 7},
+    {"source": 1, "target": 11, "value": 1},
+    {"source": 1, "target": 12, "value": 1},
+    {"source": 1, "target": 13, "value": 1},
+    {"source": 1, "target": 17, "value": 1},
+    {"source": 2, "target": 9, "value": 2},
+    {"source": 2, "target": 12, "value": 2},
+    {"source": 2, "target": 17, "value": 2},
+    {"source": 2, "target": 24, "value": 2},
+    {"source": 3, "target": 9, "value": 4},
+    {"source": 3, "target": 11, "value": 1},
+    {"source": 3, "target": 26, "value": 1},
+    {"source": 3, "target": 31, "value": 4},
+    {"source": 4, "target": 11, "value": 4},
+    {"source": 4, "target": 12, "value": 1},
+    {"source": 4, "target": 17, "value": 5},
+    {"source": 4, "target": 19, "value": 1},
+    {"source": 4, "target": 26, "value": 1},
+    {"source": 6, "target": 0, "value": 1},
+    {"source": 6, "target": 17, "value": 1},
+    {"source": 6, "target": 32, "value": 1},
+    {"source": 7, "target": 1, "value": 1},
+    {"source": 7, "target": 9, "value": 1},
+    {"source": 7, "target": 11, "value": 2},
+    {"source": 7, "target": 12, "value": 7},
+    {"source": 7, "target": 14, "value": 1},
+    {"source": 7, "target": 17, "value": 2},
+    {"source": 7, "target": 19, "value": 2},
+    {"source": 7, "target": 26, "value": 2},
+    {"source": 7, "target": 31, "value": 2},
+    {"source": 8, "target": 0, "value": 3},
+    {"source": 8, "target": 4, "value": 2},
+    {"source": 8, "target": 11, "value": 1},
+    {"source": 8, "target": 17, "value": 1},
+    {"source": 8, "target": 32, "value": 2},
+    {"source": 9, "target": 11, "value": 1},
+    {"source": 9, "target": 12, "value": 1},
+    {"source": 9, "target": 17, "value": 2},
+    {"source": 10, "target": 9, "value": 3},
+    {"source": 10, "target": 11, "value": 1},
+    {"source": 10, "target": 13, "value": 6},
+    {"source": 10, "target": 17, "value": 1},
+    {"source": 10, "target": 24, "value": 1},
+    {"source": 10, "target": 29, "value": 3},
+    {"source": 10, "target": 31, "value": 1},
+    {"source": 15, "target": 1, "value": 1},
+    {"source": 15, "target": 9, "value": 2},
+    {"source": 15, "target": 11, "value": 4},
+    {"source": 15, "target": 13, "value": 2},
+    {"source": 15, "target": 17, "value": 4},
+    {"source": 15, "target": 31, "value": 1},
+    {"source": 16, "target": 9, "value": 3},
+    {"source": 17, "target": 11, "value": 2},
+    {"source": 17, "target": 12, "value": 1},
+    {"source": 17, "target": 13, "value": 2},
+    {"source": 18, "target": 13, "value": 7},
+    {"source": 20, "target": 12, "value": 1},
+    {"source": 20, "target": 19, "value": 4},
+    {"source": 21, "target": 9, "value": 3},
+    {"source": 21, "target": 11, "value": 4},
+    {"source": 21, "target": 12, "value": 1},
+    {"source": 21, "target": 17, "value": 1},
+    {"source": 21, "target": 26, "value": 3},
+    {"source": 21, "target": 30, "value": 1},
+    {"source": 23, "target": 2, "value": 2},
+    {"source": 23, "target": 5, "value": 1},
+    {"source": 23, "target": 9, "value": 1},
+    {"source": 23, "target": 11, "value": 4},
+    {"source": 23, "target": 12, "value": 3},
+    {"source": 23, "target": 17, "value": 2},
+    {"source": 23, "target": 24, "value": 3},
+    {"source": 23, "target": 31, "value": 3},
+    {"source": 23, "target": 32, "value": 1},
+    {"source": 23, "target": 34, "value": 1},
+    {"source": 24, "target": 9, "value": 1},
+    {"source": 24, "target": 11, "value": 5},
+    {"source": 24, "target": 13, "value": 4},
+    {"source": 24, "target": 17, "value": 2},
+    {"source": 25, "target": 9, "value": 3},
+    {"source": 25, "target": 11, "value": 1},
+    {"source": 25, "target": 13, "value": 12},
+    {"source": 25, "target": 14, "value": 2},
+    {"source": 25, "target": 17, "value": 1},
+    {"source": 25, "target": 29, "value": 3},
+    {"source": 27, "target": 4, "value": 10},
+    {"source": 27, "target": 11, "value": 2},
+    {"source": 27, "target": 22, "value": 1},
+    {"source": 28, "target": 2, "value": 1},
+    {"source": 28, "target": 9, "value": 2},
+    {"source": 28, "target": 11, "value": 6},
+    {"source": 28, "target": 13, "value": 2},
+    {"source": 28, "target": 14, "value": 2},
+    {"source": 28, "target": 24, "value": 1},
+    {"source": 28, "target": 31, "value": 4},
+    {"source": 29, "target": 12, "value": 1},
+    {"source": 29, "target": 13, "value": 7},
+    {"source": 30, "target": 9, "value": 2},
+    {"source": 30, "target": 12, "value": 3},
+    {"source": 32, "target": 9, "value": 2},
+    {"source": 32, "target": 13, "value": 2},
+    {"source": 32, "target": 24, "value": 1},
+    {"source": 33, "target": 9, "value": 1},
+    {"source": 33, "target": 11, "value": 9},
+    {"source": 33, "target": 12, "value": 1},
+    {"source": 33, "target": 13, "value": 1},
+    {"source": 33, "target": 17, "value": 7},
+    {"source": 33, "target": 19, "value": 2},
+    {"source": 34, "target": 1, "value": 1},
+    {"source": 34, "target": 5, "value": 1},
+    {"source": 34, "target": 9, "value": 2},
+    {"source": 34, "target": 11, "value": 2},
+    {"source": 34, "target": 12, "value": 1},
+    {"source": 34, "target": 13, "value": 4},
+    {"source": 34, "target": 17, "value": 1},
+    {"source": 34, "target": 24, "value": 2},
+    {"source": 34, "target": 31, "value": 3}
+  ]
+};
+
+        // Dimensions
+        var width = document.getElementById('graph').offsetWidth || 1200;
+        var height = 700;
+
+        // Couleurs par groupe/région
+        var color = d3.scale.ordinal()
+            .domain([1, 2, 3, 4, 5, 6])
+            .range(["#e74c3c", "#3498db", "#f39c12", "#2ecc71", "#9b59b6", "#16a085"]);
+
+        // Création du SVG
+        var svg = d3.select("#graph")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        // Algorithme de force
+        var force = d3.layout.force()
+            .charge(-200)
+            .linkDistance(function(d) { return 150 / Math.sqrt(d.value); })
+            .size([width, height]);
+
+        // Chargement des données
+        force.nodes(footballData.nodes)
+            .links(footballData.links)
+            .start();
+
+        // Création des liens
+        var link = svg.selectAll(".link")
+            .data(footballData.links)
+            .enter()
+            .append("line")
+            .attr("class", "link")
+            .style("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+        // Calcul du degré pour chaque nœud
+        var degrees = {};
+        footballData.nodes.forEach(function(n) { degrees[n.id] = 0; });
+        footballData.links.forEach(function(l) {
+            degrees[l.source.index || l.source]++;
+            degrees[l.target.index || l.target]++;
+        });
+
+        // Création des nœuds
+        var node = svg.selectAll(".node")
+            .data(footballData.nodes)
+            .enter()
+            .append("circle")
+            .attr("class", "node")
+            .attr("r", function(d) { return 5 + degrees[d.id] * 1.5; })
+            .style("fill", function(d) { return color(d.group); })
+            .call(force.drag);
+
+        // Ajout des labels
+        var labels = svg.selectAll(".node-label")
+            .data(footballData.nodes)
+            .enter()
+            .append("text")
+            .attr("class", "node-label")
+            .text(function(d) { return d.name; })
+            .attr("text-anchor", "middle")
+            .attr("dy", -12);
+
+        // Interactions sur les nœuds
+        node.on("mouseover", function(d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr("r", function() {
+                    return +d3.select(this).attr("r") * 1.5;
+                });
+            
+            // Mettre en évidence les liens connectés
+            link.style("stroke", function(l) {
+                if (l.source === d || l.target === d) {
+                    return "#ff6b6b";
+                }
+                return "#999";
+            })
+            .style("stroke-opacity", function(l) {
+                if (l.source === d || l.target === d) {
+                    return 1;
+                }
+                return 0.2;
+            })
+            .style("stroke-width", function(l) {
+                if (l.source === d || l.target === d) {
+                    return Math.sqrt(l.value) * 2;
+                }
+                return Math.sqrt(l.value);
+            });
+
+            // Mettre en évidence les nœuds connectés
+            node.style("opacity", function(n) {
+                var connected = false;
+                footballData.links.forEach(function(l) {
+                    if ((l.source === d && l.target === n) || 
+                        (l.target === d && l.source === n) ||
+                        n === d) {
+                        connected = true;
+                    }
+                });
+                return connected ? 1 : 0.2;
+            });
+        })
+        .on("mouseout", function(d) {
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .attr("r", function() {
+                    return +d3.select(this).attr("r") / 1.5;
+                });
+            
+            // Réinitialiser les liens
+            link.style("stroke", "#999")
+                .style("stroke-opacity", 0.6)
+                .style("stroke-width", function(l) {
+                    return Math.sqrt(l.value);
+                });
+
+            // Réinitialiser les nœuds
+            node.style("opacity", 1);
+        })
+        .on("click", function(d) {
+            var connections = degrees[d.id];
+            var totalMatches = 0;
+            footballData.links.forEach(function(l) {
+                if (l.source === d || l.target === d) {
+                    totalMatches += l.value;
+                }
+            });
+            alert("🏆 " + d.fullName + " (" + d.name + ")\n\n" +
+                  "Connexions : " + connections + " pays\n" +
+                  "Total matchs : " + totalMatches);
+        });
+
+        // Fonction tick pour mettre à jour les positions
+        force.on("tick", function() {
+            link.attr("x1", function(d) { return d.source.x; })
+                .attr("y1", function(d) { return d.source.y; })
+                .attr("x2", function(d) { return d.target.x; })
+                .attr("y2", function(d) { return d.target.y; });
+
+            node.attr("cx", function(d) { return d.x; })
+                .attr("cy", function(d) { return d.y; });
+
+            labels.attr("x", function(d) { return d.x; })
+                .attr("y", function(d) { return d.y; });
+        });
+
+        // Afficher les statistiques
+        var totalMatches = footballData.links.reduce(function(sum, l) { return sum + l.value; }, 0);
+        var maxDegree = Math.max.apply(null, Object.values(degrees));
+        var mostConnectedId = Object.keys(degrees).reduce(function(a, b) { 
+            return degrees[a] > degrees[b] ? a : b; 
+        });
+        var mostConnected = footballData.nodes.find(function(n) { 
+            return n.id == mostConnectedId; 
+        });
+
+        document.getElementById("stats").innerHTML = 
+            footballData.nodes.length + " pays • " + 
+            footballData.links.length + " connexions • " +
+            totalMatches + " matchs totaux • " +
+            "Pays le plus connecté : " + mostConnected.fullName + " (" + maxDegree + " connexions)";
+
+        console.log("Graphe chargé :", footballData.nodes.length, "pays,", footballData.links.length, "connexions");
+    </script>
+</body>
+</html>

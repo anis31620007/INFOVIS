@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercice 2 - Rotations et Transitions</title>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.0.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 30px 0;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 900px;
+        }
+        #chart {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            margin: 20px auto;
+            display: block;
+        }
+        .btn-back {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        .btn-back:hover {
+            background: #764ba2;
+            color: white;
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        fieldset {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        legend {
+            color: #667eea;
+            font-weight: bold;
+            padding: 0 10px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #764ba2;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="btn-back">← Retour au menu</a>
+        
+        <h1>Exercice 2 - Rotations et Transformations</h1>
+        
+        <div id="chart" style="width: 600px; height: 400px;"></div>
+        
+        <fieldset>
+            <legend>Sélectionner la transition à appliquer</legend>
+            <input id="move" type="checkbox" name="move" value="move" /> Déplacement<br />
+            <input id="size" type="checkbox" name="size" value="size" /> Taille<br />
+            <input id="color" type="checkbox" name="color" value="color" /> Couleur<br /><br />
+            <button onclick="runTransitions()">Exécuter les transitions</button>
+            <button onclick="removeTransitions()">Réinitialiser</button>
+        </fieldset>
+        
+        <p style="margin-top: 20px;">
+            <label for="nAngle" style="display: inline-block; width: 240px; text-align: right">
+                Angle de rotation = <span id="nAngle-value">0</span>°
+            </label>
+            <input type="range" min="0" max="360" id="Anglevar" value="0">
+        </p>
+    </div>
+
+    <script>
+        var width = 600;
+        var height = 400;
+
+        // Échelle de couleur
+        var color = d3.scale.linear()
+            .range(["steelblue", "brown"])
+            .interpolate(d3.interpolateHcl)
+            .domain([0, 200]);
+
+        // Création du SVG
+        var svg = d3.select("#chart")
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .style('background-color', color(0));
+
+        // Création d'un cercle
+        var cercle = svg.append('circle')
+            .attr("r", 20)
+            .attr("cx", 100)
+            .attr("cy", 100)
+            .attr("fill", "red")
+            .style("stroke", "#333")
+            .style("stroke-width", 2);
+
+        // Création d'une ligne
+        var line = svg.append('line')
+            .attr('x1', 20)
+            .attr('y1', 20)
+            .attr('x2', 100)
+            .attr('y2', 100)
+            .style('stroke', 'black')
+            .style('stroke-width', 3);
+
+        // Création d'un rectangle
+        var rect = svg.append('rect')
+            .attr('x', 200)
+            .attr('y', 200)
+            .attr('width', 80)
+            .attr('height', 50)
+            .attr('fill', '#7b1544')
+            .attr('rx', 5)
+            .attr('ry', 5);
+
+        // Création d'un texte
+        var text = svg.append("text")
+            .attr("x", 400)
+            .attr("y", 200)
+            .style("fill", "black")
+            .style("font-size", "24px")
+            .style("font-weight", "bold")
+            .text("D3.js");
+
+        // Interaction mouseover
+        function actionMO() {
+            d3.select(this)
+                .transition()
+                .duration(300)
+                .style("opacity", 0.5)
+                .attr("transform", "scale(1.2)");
+        }
+
+        // Interaction mouseout
+        function actionMU() {
+            d3.select(this)
+                .transition()
+                .duration(300)
+                .style("opacity", 1)
+                .attr("transform", "scale(1)");
+        }
+
+        // Appliquer les événements
+        cercle.on("mouseover", actionMO).on("mouseout", actionMU);
+        rect.on("mouseover", actionMO).on("mouseout", actionMU);
+        text.on("mouseover", actionMO).on("mouseout", actionMU);
+
+        // Fonction pour réinitialiser les transitions
+        function removeTransitions() {
+            d3.select("line")
+                .transition()
+                .duration(500)
+                .attr("transform", "translate(0, 0)")
+                .style("stroke", "black")
+                .style("stroke-width", 3);
+            
+            d3.select("rect")
+                .transition()
+                .duration(500)
+                .attr("transform", "translate(0, 0)")
+                .style("fill", "#7b1544")
+                .attr("width", 80)
+                .attr("height", 50);
+            
+            d3.select("circle")
+                .transition()
+                .duration(500)
+                .attr("transform", "translate(0, 0)")
+                .style("fill", "red")
+                .attr("r", 20);
+        }
+
+        // Fonction pour exécuter les transitions
+        function runTransitions() {
+            var moveCheckboxSelected = d3.select("#move").property("checked");
+            var sizeCheckboxSelected = d3.select("#size").property("checked");
+            var colorCheckboxSelected = d3.select("#color").property("checked");
+
+            if (!moveCheckboxSelected && !sizeCheckboxSelected && !colorCheckboxSelected) {
+                alert("Veuillez sélectionner au moins une transition !");
+                return;
+            }
+
+            var lineTransition = d3.select("line").transition();
+            var rectTransition = d3.select("rect").transition();
+            var circleTransition = d3.select("circle").transition();
+
+            if (moveCheckboxSelected) {
+                lineTransition.attr("transform", "translate(250, 50)").duration(1000);
+                rectTransition.attr("transform", "translate(100, -50)").duration(1000);
+                circleTransition.attr("transform", "translate(200, 100)").duration(1000);
+            }
+
+            if (sizeCheckboxSelected) {
+                lineTransition.style("stroke-width", 10).duration(1000);
+                rectTransition.attr("width", 120).attr("height", 80).duration(1000);
+                circleTransition.attr("r", 40).duration(1000);
+            }
+
+            if (colorCheckboxSelected) {
+                lineTransition.style("stroke", "red").duration(1000);
+                rectTransition.style("fill", "blue").duration(1000);
+                circleTransition.style("fill", "green").duration(1000);
+            }
+        }
+
+        // Gestion de la rotation avec le slider
+        $(document).on('input change', '#Anglevar', function() {
+            $('#nAngle-value').html($(this).val());
+            update($(this).val());
+        });
+
+        // Fonction de mise à jour de la rotation
+        function update(nAngle) {
+            svg.select("text")
+                .transition()
+                .duration(100)
+                .attr("transform", "translate(400, 200) rotate(" + nAngle + ")");
+        }
+
+        // Initialisation
+        update(0);
+
+        // Console logs pour debug
+        console.log("d3.select(circle)", d3.select("circle"));
+        console.log("d3.select(#Anglevar)", d3.select("#Anglevar"));
+    </script>
+</body>
+</html>

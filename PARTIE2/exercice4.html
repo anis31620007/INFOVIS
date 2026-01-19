@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercice 4 - Fish Eye & Force Algorithm</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="https://bost.ocks.org/mike/fisheye/fisheye.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container-fluid {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        #graph {
+            border: 2px solid #1e3c72;
+            border-radius: 10px;
+            background: #f8f9fa;
+            cursor: crosshair;
+        }
+        .btn-back {
+            background: #1e3c72;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        .btn-back:hover {
+            background: #2a5298;
+            color: white;
+        }
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+        }
+        .node {
+            stroke: #fff;
+            stroke-width: 2px;
+            cursor: move;
+        }
+        .node.fixed {
+            stroke: #ff6b6b;
+            stroke-width: 3px;
+        }
+        .node:hover {
+            stroke: #ffd700;
+            stroke-width: 3px;
+        }
+        .link {
+            stroke: #999;
+            stroke-opacity: 0.6;
+        }
+        .node-label {
+            font-size: 9px;
+            font-weight: bold;
+            pointer-events: none;
+            text-shadow: 0 1px 2px white, 0 -1px 2px white, 1px 0 2px white, -1px 0 2px white;
+            fill: #333;
+        }
+        .controls {
+            background: #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        input[type="range"] {
+            width: 200px;
+        }
+        .btn-control {
+            background: #1e3c72;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        .btn-control:hover {
+            background: #2a5298;
+        }
+        .info-badge {
+            display: inline-block;
+            background: #1e3c72;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <a href="index_tp2.html" class="btn-back">← Retour au menu</a>
+        
+        <h1>🔍 Exercice 4 - Fish Eye & Force Algorithm (World Cup)</h1>
+        
+        <div class="row">
+            <div class="col-12">
+                <div id="graph"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <h5>⚙️ Contrôles Interactifs - Mantras de Shneiderman</h5>
+            
+            <div class="control-group">
+                <label>🔎 Fish Eye Radius:</label>
+                <input type="range" id="fisheyeRadius" min="50" max="400" value="250" step="10">
+                <span id="radiusValue">250</span> px
+            </div>
+            
+            <div class="control-group">
+                <label>🌀 Fish Eye Distortion:</label>
+                <input type="range" id="fisheyeDistortion" min="0" max="5" value="2.5" step="0.1">
+                <span id="distortionValue">2.5</span>
+            </div>
+            
+            <div class="control-group">
+                <label>⚡ Force Charge:</label>
+                <input type="range" id="forceCharge" min="-1000" max="-100" value="-300" step="50">
+                <span id="chargeValue">-300</span>
+            </div>
+            
+            <div class="control-group">
+                <label>↔️ Link Distance:</label>
+                <input type="range" id="linkDistance" min="20" max="250" value="100" step="10">
+                <span id="linkDistanceValue">100</span>
+            </div>
+            
+            <div class="control-group">
+                <button class="btn-control" onclick="toggleFisheye()">
+                    <span id="fisheyeStatus">Désactiver</span> Fish Eye
+                </button>
+                <button class="btn-control" onclick="resetPositions()">🔄 Réinitialiser</button>
+                <button class="btn-control" onclick="unfixAll()">🔓 Libérer tout</button>
+                <button class="btn-control" onclick="showStats()">📊 Statistiques</button>
+            </div>
+            
+            <div>
+                <span class="info-badge">💡 Bougez la souris = Fish Eye (zoom)</span>
+                <span class="info-badge">🖱️ Drag = Fixer un pays</span>
+                <span class="info-badge">🔴 Rouge = Pays fixé</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Données réelles World Cup
+        var footballData = {
+  "nodes": [
+    {"id": 0, "name": "ARG", "fullName": "Argentina", "group": 1},
+    {"id": 1, "name": "AUT", "fullName": "Austria", "group": 2},
+    {"id": 2, "name": "BEL", "fullName": "Belgium", "group": 2},
+    {"id": 3, "name": "BGR", "fullName": "Bulgaria", "group": 3},
+    {"id": 4, "name": "BRA", "fullName": "Brazil", "group": 1},
+    {"id": 5, "name": "CHE", "fullName": "Switzerland", "group": 2},
+    {"id": 6, "name": "CHL", "fullName": "Chile", "group": 1},
+    {"id": 7, "name": "CMR", "fullName": "Cameroon", "group": 4},
+    {"id": 8, "name": "COL", "fullName": "Colombia", "group": 1},
+    {"id": 9, "name": "DEU", "fullName": "Germany", "group": 2},
+    {"id": 10, "name": "DNK", "fullName": "Denmark", "group": 5},
+    {"id": 11, "name": "ESP", "fullName": "Spain", "group": 2},
+    {"id": 12, "name": "FRA", "fullName": "France", "group": 2},
+    {"id": 13, "name": "GBR", "fullName": "England", "group": 5},
+    {"id": 14, "name": "GRE", "fullName": "Greece", "group": 3},
+    {"id": 15, "name": "HRV", "fullName": "Croatia", "group": 3},
+    {"id": 16, "name": "IRN", "fullName": "Iran", "group": 6},
+    {"id": 17, "name": "ITA", "fullName": "Italy", "group": 2},
+    {"id": 18, "name": "JAM", "fullName": "Jamaica", "group": 4},
+    {"id": 19, "name": "JPN", "fullName": "Japan", "group": 6},
+    {"id": 20, "name": "KOR", "fullName": "South Korea", "group": 6},
+    {"id": 21, "name": "MAR", "fullName": "Morocco", "group": 4},
+    {"id": 22, "name": "MEX", "fullName": "Mexico", "group": 1},
+    {"id": 23, "name": "NGA", "fullName": "Nigeria", "group": 4},
+    {"id": 24, "name": "NLD", "fullName": "Netherlands", "group": 2},
+    {"id": 25, "name": "NOR", "fullName": "Norway", "group": 5},
+    {"id": 26, "name": "PRT", "fullName": "Portugal", "group": 2},
+    {"id": 27, "name": "PRY", "fullName": "Paraguay", "group": 1},
+    {"id": 28, "name": "ROM", "fullName": "Romania", "group": 3},
+    {"id": 29, "name": "SCO", "fullName": "Scotland", "group": 5},
+    {"id": 30, "name": "TUN", "fullName": "Tunisia", "group": 4},
+    {"id": 31, "name": "TUR", "fullName": "Turkey", "group": 3},
+    {"id": 32, "name": "USA", "fullName": "USA", "group": 1},
+    {"id": 33, "name": "YUG", "fullName": "Yugoslavia", "group": 3},
+    {"id": 34, "name": "ZAF", "fullName": "South Africa", "group": 4}
+  ],
+  "links": [
+    {"source": 0, "target": 11, "value": 4},
+    {"source": 0, "target": 17, "value": 9},
+    {"source": 1, "target": 9, "value": 7},
+    {"source": 1, "target": 11, "value": 1},
+    {"source": 1, "target": 12, "value": 1},
+    {"source": 1, "target": 13, "value": 1},
+    {"source": 1, "target": 17, "value": 1},
+    {"source": 2, "target": 9, "value": 2},
+    {"source": 2, "target": 12, "value": 2},
+    {"source": 2, "target": 17, "value": 2},
+    {"source": 2, "target": 24, "value": 2},
+    {"source": 3, "target": 9, "value": 4},
+    {"source": 3, "target": 11, "value": 1},
+    {"source": 3, "target": 26, "value": 1},
+    {"source": 3, "target": 31, "value": 4},
+    {"source": 4, "target": 11, "value": 4},
+    {"source": 4, "target": 12, "value": 1},
+    {"source": 4, "target": 17, "value": 5},
+    {"source": 4, "target": 19, "value": 1},
+    {"source": 4, "target": 26, "value": 1},
+    {"source": 6, "target": 0, "value": 1},
+    {"source": 6, "target": 17, "value": 1},
+    {"source": 6, "target": 32, "value": 1},
+    {"source": 7, "target": 1, "value": 1},
+    {"source": 7, "target": 9, "value": 1},
+    {"source": 7, "target": 11, "value": 2},
+    {"source": 7, "target": 12, "value": 7},
+    {"source": 7, "target": 14, "value": 1},
+    {"source": 7, "target": 17, "value": 2},
+    {"source": 7, "target": 19, "value": 2},
+    {"source": 7, "target": 26, "value": 2},
+    {"source": 7, "target": 31, "value": 2},
+    {"source": 8, "target": 0, "value": 3},
+    {"source": 8, "target": 4, "value": 2},
+    {"source": 8, "target": 11, "value": 1},
+    {"source": 8, "target": 17, "value": 1},
+    {"source": 8, "target": 32, "value": 2},
+    {"source": 9, "target": 11, "value": 1},
+    {"source": 9, "target": 12, "value": 1},
+    {"source": 9, "target": 17, "value": 2},
+    {"source": 10, "target": 9, "value": 3},
+    {"source": 10, "target": 11, "value": 1},
+    {"source": 10, "target": 13, "value": 6},
+    {"source": 10, "target": 17, "value": 1},
+    {"source": 10, "target": 24, "value": 1},
+    {"source": 10, "target": 29, "value": 3},
+    {"source": 10, "target": 31, "value": 1},
+    {"source": 15, "target": 1, "value": 1},
+    {"source": 15, "target": 9, "value": 2},
+    {"source": 15, "target": 11, "value": 4},
+    {"source": 15, "target": 13, "value": 2},
+    {"source": 15, "target": 17, "value": 4},
+    {"source": 15, "target": 31, "value": 1},
+    {"source": 16, "target": 9, "value": 3},
+    {"source": 17, "target": 11, "value": 2},
+    {"source": 17, "target": 12, "value": 1},
+    {"source": 17, "target": 13, "value": 2},
+    {"source": 18, "target": 13, "value": 7},
+    {"source": 20, "target": 12, "value": 1},
+    {"source": 20, "target": 19, "value": 4},
+    {"source": 21, "target": 9, "value": 3},
+    {"source": 21, "target": 11, "value": 4},
+    {"source": 21, "target": 12, "value": 1},
+    {"source": 21, "target": 17, "value": 1},
+    {"source": 21, "target": 26, "value": 3},
+    {"source": 21, "target": 30, "value": 1},
+    {"source": 23, "target": 2, "value": 2},
+    {"source": 23, "target": 5, "value": 1},
+    {"source": 23, "target": 9, "value": 1},
+    {"source": 23, "target": 11, "value": 4},
+    {"source": 23, "target": 12, "value": 3},
+    {"source": 23, "target": 17, "value": 2},
+    {"source": 23, "target": 24, "value": 3},
+    {"source": 23, "target": 31, "value": 3},
+    {"source": 23, "target": 32, "value": 1},
+    {"source": 23, "target": 34, "value": 1},
+    {"source": 24, "target": 9, "value": 1},
+    {"source": 24, "target": 11, "value": 5},
+    {"source": 24, "target": 13, "value": 4},
+    {"source": 24, "target": 17, "value": 2},
+    {"source": 25, "target": 9, "value": 3},
+    {"source": 25, "target": 11, "value": 1},
+    {"source": 25, "target": 13, "value": 12},
+    {"source": 25, "target": 14, "value": 2},
+    {"source": 25, "target": 17, "value": 1},
+    {"source": 25, "target": 29, "value": 3},
+    {"source": 27, "target": 4, "value": 10},
+    {"source": 27, "target": 11, "value": 2},
+    {"source": 27, "target": 22, "value": 1},
+    {"source": 28, "target": 2, "value": 1},
+    {"source": 28, "target": 9, "value": 2},
+    {"source": 28, "target": 11, "value": 6},
+    {"source": 28, "target": 13, "value": 2},
+    {"source": 28, "target": 14, "value": 2},
+    {"source": 28, "target": 24, "value": 1},
+    {"source": 28, "target": 31, "value": 4},
+    {"source": 29, "target": 12, "value": 1},
+    {"source": 29, "target": 13, "value": 7},
+    {"source": 30, "target": 9, "value": 2},
+    {"source": 30, "target": 12, "value": 3},
+    {"source": 32, "target": 9, "value": 2},
+    {"source": 32, "target": 13, "value": 2},
+    {"source": 32, "target": 24, "value": 1},
+    {"source": 33, "target": 9, "value": 1},
+    {"source": 33, "target": 11, "value": 9},
+    {"source": 33, "target": 12, "value": 1},
+    {"source": 33, "target": 13, "value": 1},
+    {"source": 33, "target": 17, "value": 7},
+    {"source": 33, "target": 19, "value": 2},
+    {"source": 34, "target": 1, "value": 1},
+    {"source": 34, "target": 5, "value": 1},
+    {"source": 34, "target": 9, "value": 2},
+    {"source": 34, "target": 11, "value": 2},
+    {"source": 34, "target": 12, "value": 1},
+    {"source": 34, "target": 13, "value": 4},
+    {"source": 34, "target": 17, "value": 1},
+    {"source": 34, "target": 24, "value": 2},
+    {"source": 34, "target": 31, "value": 3}
+  ]
+};
+
+        // Dimensions
+        var width = document.getElementById('graph').offsetWidth || 1200;
+        var height = 700;
+
+        // Couleurs par groupe
+        var color = d3.scale.ordinal()
+            .domain([1, 2, 3, 4, 5, 6])
+            .range(["#e74c3c", "#3498db", "#f39c12", "#2ecc71", "#9b59b6", "#16a085"]);
+
+        // Fish Eye
+        var fisheyeEnabled = true;
+        var fisheye = d3.fisheye.circular()
+            .radius(250)
+            .distortion(2.5);
+
+        // SVG
+        var svg = d3.select("#graph")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
+
+        // Force Layout
+        var force = d3.layout.force()
+            .size([width, height])
+            .charge(-300)
+            .linkDistance(100)
+            .on("tick", tick);
+
+        // Drag behavior
+        var drag = force.drag()
+            .on("dragstart", function(d) {
+                d3.select(this).classed("fixed", d.fixed = true);
+            });
+
+        // Chargement des données
+        force.nodes(footballData.nodes)
+            .links(footballData.links)
+            .start();
+
+        // Création des liens
+        var link = svg.selectAll(".link")
+            .data(footballData.links)
+            .enter()
+            .append("line")
+            .attr("class", "link")
+            .style("stroke-width", function(d) { return Math.sqrt(d.value); });
+
+        // Création des nœuds
+        var node = svg.selectAll(".node")
+            .data(footballData.nodes)
+            .enter()
+            .append("circle")
+            .attr("class", "node")
+            .attr("r", 8)
+            .style("fill", function(d) { return color(d.group); })
+            .call(drag);
+
+        // Labels
+        var labels = svg.selectAll(".node-label")
+            .data(footballData.nodes)
+            .enter()
+            .append("text")
+            .attr("class", "node-label")
+            .text(function(d) { return d.name; })
+            .attr("text-anchor", "middle")
+            .attr("dy", -12);
+
+        // Fish Eye mousemove
+        svg.on("mousemove", function() {
+            if (!fisheyeEnabled) return;
+            
+            fisheye.focus(d3.mouse(this));
+
+            node.each(function(d) { 
+                d.fisheye = fisheye(d); 
+            })
+            .attr("cx", function(d) { return d.fisheye.x; })
+            .attr("cy", function(d) { return d.fisheye.y; })
+            .attr("r", function(d) { return d.fisheye.z * 4.5; });
+
+            link.attr("x1", function(d) { return d.source.fisheye.x; })
+                .attr("y1", function(d) { return d.source.fisheye.y; })
+                .attr("x2", function(d) { return d.target.fisheye.x; })
+                .attr("y2", function(d) { return d.target.fisheye.y; });
+
+            labels.attr("x", function(d) { return d.fisheye.x; })
+                .attr("y", function(d) { return d.fisheye.y; })
+                .style("font-size", function(d) { return (d.fisheye.z * 9) + "px"; });
+        });
+
+        // Fonction tick
+        function tick() {
+            if (fisheyeEnabled) return;
+
+            link.attr("x1", function(d) { return d.source.x; })
+                .attr("y1", function(d) { return d.source.y; })
+                .attr("x2", function(d) { return d.target.x; })
+                .attr("y2", function(d) { return d.target.y; });
+
+            node.attr("cx", function(d) { return d.x; })
+                .attr("cy", function(d) { return d.y; });
+
+            labels.attr("x", function(d) { return d.x; })
+                .attr("y", function(d) { return d.y; });
+        }
+
+        // Contrôles
+        d3.select("#fisheyeRadius").on("input", function() {
+            var value = +this.value;
+            d3.select("#radiusValue").text(value);
+            fisheye.radius(value);
+        });
+
+        d3.select("#fisheyeDistortion").on("input", function() {
+            var value = +this.value;
+            d3.select("#distortionValue").text(value);
+            fisheye.distortion(value);
+        });
+
+        d3.select("#forceCharge").on("input", function() {
+            var value = +this.value;
+            d3.select("#chargeValue").text(value);
+            force.charge(value).start();
+        });
+
+        d3.select("#linkDistance").on("input", function() {
+            var value = +this.value;
+            d3.select("#linkDistanceValue").text(value);
+            force.linkDistance(value).start();
+        });
+
+        // Fonctions de contrôle
+        function toggleFisheye() {
+            fisheyeEnabled = !fisheyeEnabled;
+            document.getElementById("fisheyeStatus").textContent = 
+                fisheyeEnabled ? "Désactiver" : "Activer";
+            
+            if (!fisheyeEnabled) {
+                node.attr("r", 8);
+                labels.style("font-size", "9px");
+                force.start();
+            }
+        }
+
+        function resetPositions() {
+            node.each(function(d) {
+                d.fixed = false;
+                d.x = width / 2 + Math.random() * 100 - 50;
+                d.y = height / 2 + Math.random() * 100 - 50;
+            });
+            node.classed("fixed", false);
+            force.start();
+        }
+
+        function unfixAll() {
+            node.each(function(d) { d.fixed = false; });
+            node.classed("fixed", false);
+            force.resume();
+        }
+
+        function showStats() {
+            var degrees = {};
+            footballData.nodes.forEach(function(n) { degrees[n.id] = 0; });
+            footballData.links.forEach(function(l) {
+                degrees[l.source.index || l.source]++;
+                degrees[l.target.index || l.target]++;
+            });
+            
+            var totalMatches = footballData.links.reduce(function(sum, l) { 
+                return sum + l.value; 
+            }, 0);
+            
+            var maxDegree = Math.max.apply(null, Object.values(degrees));
+            var mostConnectedId = Object.keys(degrees).reduce(function(a, b) { 
+                return degrees[a] > degrees[b] ? a : b; 
+            });
+            var mostConnected = footballData.nodes.find(function(n) { 
+                return n.id == mostConnectedId; 
+            });
+
+            var fixedCount = footballData.nodes.filter(function(n) { 
+                return n.fixed; 
+            }).length;
+
+            alert("📊 Statistiques du Graphe\n\n" +
+                  "🌍 Pays : " + footballData.nodes.length + "\n" +
+                  "🔗 Connexions : " + footballData.links.length + "\n" +
+                  "⚽ Total matchs : " + totalMatches + "\n" +
+                  "🏆 Plus connecté : " + mostConnected.fullName + " (" + maxDegree + " connexions)\n" +
+                  "📌 Pays fixés : " + fixedCount);
+        }
+
+        console.log("Exercice 4 chargé avec 35 pays - Fish Eye activé");
+    </script>
+</body>
+</html>

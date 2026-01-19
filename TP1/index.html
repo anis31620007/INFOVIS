@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TP1 - D3.js InfoVis 2023</title>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 50px 0;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .btn-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+        .btn-custom:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            color: white;
+        }
+        h1 {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-5">TP1 - Représentation Graphique avec D3.js</h1>
+        <p class="text-center text-white mb-5">InfoVis 2023 - Dr. Fadloun</p>
+        
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body text-center p-4">
+                        <h3 class="card-title mb-3">Exercice 1</h3>
+                        <p class="card-text mb-4">
+                            Formes SVG, cercles et animations de transition
+                        </p>
+                        <a href="exercice1.html" class="btn btn-custom">
+                            Accéder à l'exercice 1
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-body text-center p-4">
+                        <h3 class="card-title mb-3">Exercice 2</h3>
+                        <p class="card-text mb-4">
+                            Rotations, transformations et contrôles interactifs
+                        </p>
+                        <a href="exercice2.html" class="btn btn-custom">
+                            Accéder à l'exercice 2
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h4 class="card-title">À propos de D3.js</h4>
+                <p class="card-text">
+                    D3.js (Data-Driven Documents) est une bibliothèque JavaScript pour manipuler des documents basés sur les données. 
+                    Elle facilite la visualisation de données en utilisant HTML, SVG et CSS.
+                </p>
+                <ul>
+                    <li>Encodage visuel multiple (forme, orientation, couleur)</li>
+                    <li>Vue globale personnalisée</li>
+                    <li>Visualisations analytiques fréquemment utilisées</li>
+                    <li>Suivi du processus de visualisation d'informations</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
