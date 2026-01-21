@@ -144,10 +144,10 @@
             .attr('rx', 5)
             .attr('ry', 5);
 
-        // Création d'un texte
+        // Création d'un texte - CORRIGÉ : position initiale visible
         var text = svg.append("text")
             .attr("x", 400)
-            .attr("y", 200)
+            .attr("y", 100)
             .style("fill", "black")
             .style("font-size", "24px")
             .style("font-weight", "bold")
@@ -199,6 +199,15 @@
                 .attr("transform", "translate(0, 0)")
                 .style("fill", "red")
                 .attr("r", 20);
+            
+            // Réinitialiser aussi le texte et le slider
+            d3.select("text")
+                .transition()
+                .duration(500)
+                .attr("transform", "rotate(0)");
+            
+            d3.select("#Anglevar").property("value", 0);
+            d3.select("#nAngle-value").text("0");
         }
 
         // Fonction pour exécuter les transitions
@@ -241,12 +250,10 @@
             update($(this).val());
         });
 
-        // Fonction de mise à jour de la rotation
+        // Fonction de mise à jour de la rotation - CORRIGÉE
         function update(nAngle) {
             svg.select("text")
-                .transition()
-                .duration(100)
-                .attr("transform", "translate(400, 200) rotate(" + nAngle + ")");
+                .attr("transform", "rotate(" + nAngle + ", 400, 100)");
         }
 
         // Initialisation

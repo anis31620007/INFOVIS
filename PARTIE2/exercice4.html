@@ -110,7 +110,7 @@
     <div class="container-fluid">
         <a href="index_tp2.html" class="btn-back">← Retour au menu</a>
         
-        <h1>🔍 Exercice 4 - Fish Eye & Force Algorithm (World Cup)</h1>
+        <h1> Exercice 4 - Fish Eye & Force Algorithm (World Cup)</h1>
         
         <div class="row">
             <div class="col-12">
@@ -119,7 +119,7 @@
         </div>
         
         <div class="controls">
-            <h5>⚙️ Contrôles Interactifs - Mantras de Shneiderman</h5>
+            <h5>Contrôles Interactifs - Mantras de Shneiderman</h5>
             
             <div class="control-group">
                 <label>🔎 Fish Eye Radius:</label>
@@ -128,19 +128,19 @@
             </div>
             
             <div class="control-group">
-                <label>🌀 Fish Eye Distortion:</label>
+                <label> Fish Eye Distortion:</label>
                 <input type="range" id="fisheyeDistortion" min="0" max="5" value="2.5" step="0.1">
                 <span id="distortionValue">2.5</span>
             </div>
             
             <div class="control-group">
-                <label>⚡ Force Charge:</label>
+                <label> Force Charge:</label>
                 <input type="range" id="forceCharge" min="-1000" max="-100" value="-300" step="50">
                 <span id="chargeValue">-300</span>
             </div>
             
             <div class="control-group">
-                <label>↔️ Link Distance:</label>
+                <label>Link Distance:</label>
                 <input type="range" id="linkDistance" min="20" max="250" value="100" step="10">
                 <span id="linkDistanceValue">100</span>
             </div>
@@ -149,16 +149,10 @@
                 <button class="btn-control" onclick="toggleFisheye()">
                     <span id="fisheyeStatus">Désactiver</span> Fish Eye
                 </button>
-                <button class="btn-control" onclick="resetPositions()">🔄 Réinitialiser</button>
-                <button class="btn-control" onclick="unfixAll()">🔓 Libérer tout</button>
-                <button class="btn-control" onclick="showStats()">📊 Statistiques</button>
+                
             </div>
             
-            <div>
-                <span class="info-badge">💡 Bougez la souris = Fish Eye (zoom)</span>
-                <span class="info-badge">🖱️ Drag = Fixer un pays</span>
-                <span class="info-badge">🔴 Rouge = Pays fixé</span>
-            </div>
+           
         </div>
     </div>
 
@@ -508,12 +502,12 @@
                 return n.fixed; 
             }).length;
 
-            alert("📊 Statistiques du Graphe\n\n" +
-                  "🌍 Pays : " + footballData.nodes.length + "\n" +
-                  "🔗 Connexions : " + footballData.links.length + "\n" +
-                  "⚽ Total matchs : " + totalMatches + "\n" +
-                  "🏆 Plus connecté : " + mostConnected.fullName + " (" + maxDegree + " connexions)\n" +
-                  "📌 Pays fixés : " + fixedCount);
+            alert(" Statistiques du Graphe\n\n" +
+                  " Pays : " + footballData.nodes.length + "\n" +
+                  " Connexions : " + footballData.links.length + "\n" +
+                  " Total matchs : " + totalMatches + "\n" +
+                  " Plus connecté : " + mostConnected.fullName + " (" + maxDegree + " connexions)\n" +
+                  " Pays fixés : " + fixedCount);
         }
 
         console.log("Exercice 4 chargé avec 35 pays - Fish Eye activé");
